@@ -1,0 +1,7 @@
+# --- Ignore Files ---
+node_modules
+.pnpm-store
+dist/
+tsconfig.node.tsbuildinfo
+tsconfig.build.tsbuildinfo
+tsconfig.base.tsbuildinfo
