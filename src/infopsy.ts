@@ -9,12 +9,12 @@ import { InputShape, OutputShape } from './infer'
 
 type Locale = 'sv-SE'
 
-export type Infopsy = {
+export type Infopsy<CFG extends InfopsyConfig> = {
   /**
    * Creates a content extractor function acording to the specification `spec`.
    */
   extractor: <
-    S extends Record<string, FieldInterpretationSpec<string>>,
+    S extends Record<string, FieldInterpretationSpec<CFG, string>>,
     I extends InputShape<S> = InputShape<S>,
     O extends OutputShape<S> = OutputShape<S>,
   >(
@@ -28,7 +28,7 @@ export type Infopsy = {
    *
    * @returns A builder for defining the field interpretation specification.
    */
-  from: <SF extends string>(sourceProp: SF) => FieldInterpreterSpecBuilder<SF>
+  from: <SF extends string>(sourceProp: SF) => FieldInterpreterSpecBuilder<CFG, SF>
 }
 
 export type InterpreterMap = Record<string, Interpreter>
@@ -50,16 +50,16 @@ export interface InfopsyConfig {
  *
  * @returns An object with methods for creating extractors and field interpreter specs.
  */
-export const infopsy = (config: InfopsyConfig = {}): Infopsy => {
+export const infopsy = <CFG extends InfopsyConfig>(config: CFG): Infopsy<CFG> => {
   return {
     extractor<
-      S extends Record<string, FieldInterpretationSpec<string>>,
+      S extends Record<string, FieldInterpretationSpec<CFG, string>>,
       I extends InputShape<S> = InputShape<S>,
       O extends OutputShape<S> = OutputShape<S>,
     >(spec: S): Extractor<I, O> {
-      return makeExtractor(spec)
+      return makeExtractor<S, CFG, I, O>(spec)
     },
-    from<SF extends string>(sourceProp: SF): FieldInterpreterSpecBuilder<SF> {
+    from<SF extends string>(sourceProp: SF): FieldInterpreterSpecBuilder<CFG, SF> {
       return fieldInterpreterSpec(sourceProp)
     },
   }

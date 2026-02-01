@@ -7,15 +7,19 @@ import {
   FieldInterpreterSpecBuilderInt,
 } from './field'
 import { InputShape, OutputShape } from './infer'
+import { InfopsyConfig } from './infopsy'
 
 export interface InterpretationSpec {
   [prop: string]: FieldInterpreter
 }
 
-export interface InterpretationSpecDefinition<SourceField extends string> {
+export interface InterpretationSpecDefinition<
+  SourceField extends string,
+  CFG extends InfopsyConfig = InfopsyConfig,
+> {
   [prop: string]:
-    | FieldInterpreterSpec<SourceField>
-    | FieldInterpreterSpecBuilder<SourceField>
+    | FieldInterpreterSpec<CFG, SourceField>
+    | FieldInterpreterSpecBuilder<CFG, SourceField>
 }
 
 export interface ExtractionResult<O> {
@@ -26,15 +30,15 @@ export interface ExtractionResult<O> {
 export type Extractor<I, O> = (input: I) => ExtractionResult<O>
 
 export const makeConcreteInterpretationSpec = <
-  S extends Record<string, FieldInterpretationSpec<string>>,
-  C extends Record<string, FieldInterpreterSpec<string>>,
+  S extends Record<string, FieldInterpretationSpec<any, string>>,
+  C extends Record<string, FieldInterpreterSpec<any, string>>,
 >(
   def: S
 ): C => {
   return Object.entries(def).reduce((concrete, [key, fieldItp]) => {
     concrete[key] =
       FIELD_ITP_BUILDER in fieldItp
-        ? (fieldItp as FieldInterpreterSpecBuilderInt<string>).build()
+        ? (fieldItp as FieldInterpreterSpecBuilderInt<any, string>).build()
         : fieldItp
 
     return concrete
@@ -44,7 +48,8 @@ export const makeConcreteInterpretationSpec = <
 }
 
 export const makeExtractor = <
-  S extends Record<string, FieldInterpretationSpec<string>>,
+  S extends Record<string, FieldInterpretationSpec<CFG, string>>,
+  CFG extends InfopsyConfig = InfopsyConfig,
   I extends InputShape<S> = InputShape<S>,
   O extends OutputShape<S> = OutputShape<S>,
 >(

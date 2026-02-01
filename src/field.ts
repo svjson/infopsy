@@ -1,43 +1,56 @@
+import { InfopsyConfig } from './infopsy'
+
 export const FIELD_ITP_BUILDER: unique symbol = Symbol('FieldInterpreterSpecBuilder')
 
-export interface FieldInterpreterSpecBuilder<SourceField extends string> {
+export interface FieldInterpreterSpecBuilder<
+  CFG extends InfopsyConfig,
+  SourceField extends string,
+> {
   readonly [FIELD_ITP_BUILDER]: true
-  use: (interpreter: string) => FieldInterpreterSpecBuilder<SourceField>
+  use: (
+    interpreter: keyof CFG['interpreters']
+  ) => FieldInterpreterSpecBuilder<CFG, SourceField>
 }
 
-export type FieldInterpreterSpecBuilderInt<SourceField extends string> =
-  FieldInterpreterSpecBuilder<SourceField> & {
-    build: () => FieldInterpreterSpec<SourceField>
-  }
+export type FieldInterpreterSpecBuilderInt<
+  CFG extends InfopsyConfig,
+  SourceField extends string,
+> = FieldInterpreterSpecBuilder<CFG, SourceField> & {
+  build: () => FieldInterpreterSpec<CFG, SourceField>
+}
 
-export type FieldInterpreterSpec<SourceField extends string> = {
+export type FieldInterpreterSpec<
+  CFG extends InfopsyConfig,
+  SourceField extends string,
+> = {
   sourceProp: SourceField
-  interpreter?: string
+  interpreter?: keyof CFG['interpreters']
 }
 
-export type FieldInterpretationSpec<SourceField extends string> =
-  | FieldInterpreterSpec<SourceField>
-  | FieldInterpreterSpecBuilder<SourceField>
+export type FieldInterpretationSpec<
+  CFG extends InfopsyConfig,
+  SourceField extends string,
+> = FieldInterpreterSpec<CFG, SourceField> | FieldInterpreterSpecBuilder<CFG, SourceField>
 
 export type FieldInterpreter = {
   sourceProp?: string
 }
 
-export const fieldInterpreterSpec = <SF extends string>(
+export const fieldInterpreterSpec = <CFG extends InfopsyConfig, SF extends string>(
   sourceProp: SF
-): FieldInterpreterSpecBuilder<SF> => {
-  const opts: FieldInterpreterSpec<SF> = {
+): FieldInterpreterSpecBuilder<CFG, SF> => {
+  const opts: FieldInterpreterSpec<CFG, SF> = {
     sourceProp,
   }
 
   return {
     [FIELD_ITP_BUILDER]: true,
-    use(interpreter: string) {
+    use(interpreter: keyof CFG['interpreters']) {
       opts.interpreter = interpreter
       return this
     },
-    build(): FieldInterpreterSpec<SF> {
+    build(): FieldInterpreterSpec<CFG, SF> {
       return opts
     },
-  } as FieldInterpreterSpecBuilder<SF>
+  } as FieldInterpreterSpecBuilder<CFG, SF>
 }
