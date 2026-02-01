@@ -1,4 +1,6 @@
 import { InfopsyConfig } from './infopsy'
+import { Interpreter } from './interpreter'
+import { RETAIN } from './retain'
 
 export const FIELD_ITP_BUILDER: unique symbol = Symbol('FieldInterpreterSpecBuilder')
 
@@ -34,22 +36,25 @@ export type FieldInterpretationSpec<
 
 export type FieldInterpreter = {
   sourceProp?: string
+  interpreter: Interpreter
 }
 
 export const fieldInterpreterSpec = <CFG extends InfopsyConfig, SF extends string>(
+  config: CFG,
   sourceProp: SF
 ): FieldInterpreterSpecBuilder<CFG, SF> => {
-  const opts: FieldInterpreterSpec<CFG, SF> = {
+  const opts: FieldInterpreter /*<CFG, SF>*/ = {
     sourceProp,
+    interpreter: RETAIN,
   }
 
   return {
     [FIELD_ITP_BUILDER]: true,
     use(interpreter: keyof CFG['interpreters']) {
-      opts.interpreter = interpreter
+      opts.interpreter = (config.interpreters as CFG['interpreters'])[interpreter]
       return this
     },
-    build(): FieldInterpreterSpec<CFG, SF> {
+    build(): FieldInterpreter /* <CFG, SF> */ {
       return opts
     },
   } as FieldInterpreterSpecBuilder<CFG, SF>

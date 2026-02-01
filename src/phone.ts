@@ -7,5 +7,10 @@ export interface PhoneNumberInterpreterOpts {
 export const phoneNumber = (opts: PhoneNumberInterpreterOpts = {}): Interpreter => {
   return {
     type: 'phone-number',
+    process: (input: any) => {
+      return {
+        fact: input,
+      }
+    },
   }
 }

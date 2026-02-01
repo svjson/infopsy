@@ -36,10 +36,39 @@ export type InterpreterMap = Record<string, Interpreter>
 /**
  * Configuration options for an infopsy instance.
  */
-export interface InfopsyConfig {
+export interface InfopsyOptions {
   locale?: Locale
 
   interpreters?: InterpreterMap
+}
+
+/**
+ * Concrete configuration options for an infopsy instance.
+ */
+export interface InfopsyConfig {
+  locale: Locale
+
+  interpreters: InterpreterMap
+}
+
+type ConcreteConfig<Opts extends InfopsyOptions> = {
+  locale: Opts['locale'] extends Locale ? Opts['locale'] : 'sv-SE'
+  interpreters: Opts['interpreters'] extends InterpreterMap ? Opts['interpreters'] : {}
+}
+
+const makeInfopsy = <CFG extends InfopsyConfig>(config: CFG) => {
+  return {
+    extractor<
+      S extends Record<string, FieldInterpretationSpec<CFG, string>>,
+      I extends InputShape<S> = InputShape<S>,
+      O extends OutputShape<S> = OutputShape<S>,
+    >(spec: S): Extractor<I, O> {
+      return makeExtractor<S, CFG, I, O>(spec)
+    },
+    from<SF extends string>(sourceProp: SF): FieldInterpreterSpecBuilder<CFG, SF> {
+      return fieldInterpreterSpec(config, sourceProp)
+    },
+  }
 }
 
 /**
@@ -50,17 +79,13 @@ export interface InfopsyConfig {
  *
  * @returns An object with methods for creating extractors and field interpreter specs.
  */
-export const infopsy = <CFG extends InfopsyConfig>(config: CFG): Infopsy<CFG> => {
-  return {
-    extractor<
-      S extends Record<string, FieldInterpretationSpec<CFG, string>>,
-      I extends InputShape<S> = InputShape<S>,
-      O extends OutputShape<S> = OutputShape<S>,
-    >(spec: S): Extractor<I, O> {
-      return makeExtractor<S, CFG, I, O>(spec)
-    },
-    from<SF extends string>(sourceProp: SF): FieldInterpreterSpecBuilder<CFG, SF> {
-      return fieldInterpreterSpec(sourceProp)
-    },
-  }
+export const infopsy = <Opts extends InfopsyOptions>(
+  opts: Opts
+): Infopsy<ConcreteConfig<Opts>> => {
+  const config = {
+    locale: opts.locale ?? 'sv-SE',
+    interpreters: opts.interpreters ?? {},
+  } satisfies ConcreteConfig<Opts>
+
+  return makeInfopsy(config)
 }

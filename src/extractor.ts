@@ -31,7 +31,7 @@ export type Extractor<I, O> = (input: I) => ExtractionResult<O>
 
 export const makeConcreteInterpretationSpec = <
   S extends Record<string, FieldInterpretationSpec<any, string>>,
-  C extends Record<string, FieldInterpreterSpec<any, string>>,
+  C extends Record<string, FieldInterpreter>,
 >(
   def: S
 ): C => {
@@ -58,7 +58,8 @@ export const makeExtractor = <
   const spec = makeConcreteInterpretationSpec(specDef)
   return (input: I) => {
     const o = Object.entries(spec).reduce((result, [prop, itp]) => {
-      result[prop] = input[itp.sourceProp as keyof I]
+      const ir = itp.interpreter.process(input[itp.sourceProp as keyof I])
+      result[prop] = ir.fact
       return result
     }, {} as any)
 
