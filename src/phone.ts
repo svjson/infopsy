@@ -6,7 +6,7 @@ import { Claim, FieldAnalysis, Interpreter, InterpreterResult } from './interpre
  * symbols and frequently occuring typos.
  */
 const PHONE_NUMBER_REGEX =
-  /\s*((?:\+?\d{1,4}[\s\-.*()#´]?)?(?:\(?\d{2,4}\)?[\s\-.*()]?)?\d[\d\s\-.*()]*\d)\s*/
+  /\s*((?:\+?\d{1,4}[\s\-.*()#´]?)?(?:\(?\d{2,4}\)?[\s\-.*()]?)?\d[\d\s\-.*()]*\d)\s*/d
 
 export interface PhoneNumberInterpreterOpts {
   inferAreaCode?: boolean
@@ -14,14 +14,15 @@ export interface PhoneNumberInterpreterOpts {
 
 export const extractPhoneNumber = (input?: string): Claim[] => {
   if (!input) return []
-  const match = input.match(PHONE_NUMBER_REGEX)
-  if (match && match[1] && match[1].length > 5 && typeof match.index === 'number') {
+  const match = PHONE_NUMBER_REGEX.exec(input)
+  if (match && match[1] && match[1].length > 5 && Array.isArray(match.indices?.[1])) {
+    const [start, end] = match.indices[1]
     const cleaned = match[1].replaceAll(/\s/g, ' ').replaceAll(/[´.]/g, '-')
     return [
       {
         fact: cleaned,
-        start: match.index,
-        end: match.index! + match[1].length,
+        start,
+        end,
         kind: 'phone-number',
       },
     ]

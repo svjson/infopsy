@@ -21,8 +21,19 @@ describe('extractPhoneNumber', () => {
           {
             kind: 'phone-number',
             fact: '070-444 19 19',
-            start: 4,
-            end: 17,
+            start: 5,
+            end: 18,
+          },
+        ],
+      ],
+      [
+        '      0700098811',
+        [
+          {
+            kind: 'phone-number',
+            fact: '0700098811',
+            start: 6,
+            end: 16,
           },
         ],
       ],
