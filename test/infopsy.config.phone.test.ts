@@ -19,14 +19,14 @@ describe('Basic Usage', () => {
     })
 
     const result = extract({
-      pd_phone: '070-112 28 45',
+      pd_phone: '070-112 28 45 Work',
     })
 
     expect(result).toEqual({
       success: true,
       result: {
         phoneNumber: '070-112 28 45',
-        comment: '070-112 28 45',
+        comment: 'Work',
       },
     })
   })

@@ -1,4 +1,4 @@
-import { Interpreter } from './interpreter'
+import { FieldAnalysis, Interpreter } from './interpreter'
 
 export interface UnclassifiedInterpreterOpts {
   __brand: never
@@ -9,10 +9,17 @@ export const unclassified = (
 ): Interpreter => {
   return {
     type: 'unclassified',
-    process: (input: any) => {
-      return {
-        fact: input,
-      }
+    process: (input: FieldAnalysis) => {
+      return input.segments
+        .map((s) => {
+          return {
+            start: s.start,
+            end: s.end,
+            kind: 'unclassified',
+            fact: s.content?.trim(),
+          }
+        })
+        .filter((c) => c.fact !== undefined && c.fact.length)
     },
   }
 }

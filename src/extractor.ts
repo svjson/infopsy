@@ -8,6 +8,7 @@ import {
 } from './field'
 import { InputShape, OutputShape } from './infer'
 import { InfopsyConfig } from './infopsy'
+import { Claim, FieldAnalysis, Segment } from './interpreter'
 
 export interface InterpretationSpec {
   [prop: string]: FieldInterpreter
@@ -43,8 +44,66 @@ export const makeConcreteInterpretationSpec = <
 
     return concrete
   }, {} as any) as C
+}
 
-  return {} as C
+export const applyClaim = (fa: FieldAnalysis, claim: Claim) => {
+  fa.segments = fa.segments.flatMap((seg) => {
+    if (claim.start >= seg.start && claim.end <= seg.end) {
+      return [
+        claim.start > seg.start
+          ? {
+              ...seg,
+              start: seg.start,
+              end: claim.start,
+              content: seg.content?.slice(seg.start, claim.start),
+            }
+          : undefined,
+        {
+          start: claim.start,
+          end: claim.end,
+          kind: claim.kind,
+          content: claim.fact,
+        },
+        claim.end < seg.end
+          ? {
+              ...seg,
+              start: claim.end,
+              end: seg.end,
+              content: seg.content?.slice(claim.end, seg.end),
+            }
+          : undefined,
+      ].filter(Boolean) as Segment[]
+    }
+    return [seg]
+  })
+  fa.claims.push(claim)
+  fa.claims.sort((a, b) => b.start - a.end)
+}
+
+export const makeInitialFieldAnalysisMap = <I extends Record<string, any>>(
+  input: I,
+  spec: Record<string, FieldInterpreter>
+) => {
+  return Object.values(spec).reduce(
+    (initial, itp) => {
+      const fi = input[itp.sourceProp as keyof I]
+      const raw = typeof fi === 'undefined' ? undefined : String(fi)
+      initial[itp.sourceProp as keyof I] = {
+        raw: fi,
+        segments: [
+          {
+            start: typeof raw === 'string' ? 0 : -1,
+            end: typeof raw === 'string' ? raw.length : -1,
+            content: raw,
+            claim: [],
+          },
+        ],
+        claims: [],
+      } satisfies FieldAnalysis
+      return initial
+    },
+    {} as Record<keyof I, FieldAnalysis>
+  )
 }
 
 export const makeExtractor = <
@@ -56,10 +115,18 @@ export const makeExtractor = <
   specDef: S
 ): Extractor<I, O> => {
   const spec = makeConcreteInterpretationSpec(specDef)
+
   return (input: I) => {
+    const analysis = makeInitialFieldAnalysisMap(input, spec)
     const o = Object.entries(spec).reduce((result, [prop, itp]) => {
-      const ir = itp.interpreter.process(input[itp.sourceProp as keyof I])
-      result[prop] = ir.fact
+      const inputKey = itp.sourceProp as keyof I
+      const fa = analysis[inputKey]
+      const claims = itp.interpreter.process(fa)
+      claims.forEach((claim) => {
+        applyClaim(fa, claim)
+        result[prop] = claim.fact
+      })
+
       return result
     }, {} as any)
 

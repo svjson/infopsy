@@ -1,10 +1,17 @@
-import { Interpreter } from './interpreter'
+import { FieldAnalysis, Interpreter, InterpreterResult } from './interpreter'
 
 export const RETAIN: Interpreter = {
   type: 'retain',
-  process: (input: any) => {
-    return {
-      fact: input,
+  process: (input: FieldAnalysis): InterpreterResult | undefined => {
+    if (typeof input.raw !== 'undefined') {
+      return [
+        {
+          fact: input.raw,
+          start: 0,
+          end: input.raw.length,
+          kind: 'raw',
+        },
+      ]
     }
   },
 }

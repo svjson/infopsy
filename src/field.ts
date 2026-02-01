@@ -32,7 +32,10 @@ export type FieldInterpreterSpec<
 export type FieldInterpretationSpec<
   CFG extends InfopsyConfig,
   SourceField extends string,
-> = FieldInterpreterSpec<CFG, SourceField> | FieldInterpreterSpecBuilder<CFG, SourceField>
+> =
+  | FieldInterpreterSpec<CFG, SourceField>
+  | FieldInterpreterSpecBuilder<CFG, SourceField>
+  | FieldInterpreter
 
 export type FieldInterpreter = {
   sourceProp?: string
