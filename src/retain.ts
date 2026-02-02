@@ -2,7 +2,7 @@ import { FieldAnalysis, Interpreter, InterpreterResult } from './interpreter'
 
 export const RETAIN: Interpreter = {
   type: 'retain',
-  process: (input: FieldAnalysis): InterpreterResult | undefined => {
+  process: (input: FieldAnalysis): InterpreterResult => {
     if (typeof input.raw !== 'undefined') {
       return [
         {
@@ -13,5 +13,6 @@ export const RETAIN: Interpreter = {
         },
       ]
     }
+    return []
   },
 }

@@ -11,6 +11,7 @@ export const unclassified = (
     type: 'unclassified',
     process: (input: FieldAnalysis) => {
       return input.segments
+        .filter((s) => s.kind === undefined)
         .map((s) => {
           return {
             start: s.start,

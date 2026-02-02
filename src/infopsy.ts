@@ -7,7 +7,7 @@ import {
 import { Extractor, makeExtractor } from './extractor'
 import { InputShape, OutputShape } from './infer'
 
-type Locale = 'sv-SE'
+export type Locale = 'sv-SE'
 
 export type Infopsy<CFG extends InfopsyConfig> = {
   /**
